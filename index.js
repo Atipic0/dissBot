@@ -1,4 +1,4 @@
-require('dotenv').config()
+process.env.NODE_ENV ?? require('dotenv').config()
 const { Telegraf } = require('telegraf')
 const https = require('https')
 
