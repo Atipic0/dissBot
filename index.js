@@ -1,42 +1,47 @@
 process.env.NODE_ENV ?? require('dotenv').config()
 const { Telegraf } = require('telegraf')
-const https = require('https')
-
+const axios = require('axios').default;
 const bot = new Telegraf(process.env.TOKEN)
-bot.start((ctx) => ctx.reply('Welcome'))
+
 bot.help(async (ctx) => {
-    let chat = await ctx.getChat()
-    console.log(chat)
-    ctx.reply('Send me a sticker')
+    ctx.reply('No help for you punk')
 })
-bot.command('dissme', (ctx) => {
 
+bot.hears(['kevin', 'Kevin'], (ctx) => {
+    ctx.replyWithPhoto('https://i.insider.com/5229449eecad04c3708b4570?width=1100&format=jpeg&auto=webps')
+})
 
-    https.get('https://evilinsult.com/generate_insult.php?lang=en&type=json', res => {
-        let data = [];
-        const headerDate = res.headers && res.headers.date ? res.headers.date : 'no response date';
+bot.command('disskevin', async (ctx) => {
 
-        res.on('data', chunk => {
-            data.push(chunk);
-        });
-
-        res.on('end', () => {
-            const body = JSON.parse(Buffer.concat(data).toString());
-            ctx.reply(body.insult)
-        });
-
-    }).on('error', err => {
-        console.log('Error: ', err.message);
-        ctx.reply('you are too sad to insult')
-    });
-
+    const insult = await getInsult()
+    const insulto = await getInsulto()
+    ctx.reply('@K_Silvestri: ' + insult)
+    ctx.replyWithVoice({ url: `http://api.voicerss.org/?key=${process.env.AUDIO}&hl=en-us&c=OGG&src=${insult}` })
+    ctx.reply('@K_Silvestri: ' + insulto)
+    ctx.replyWithVoice({ url: `http://api.voicerss.org/?key=${process.env.AUDIO}&hl=it-it&c=OGG&src=${insulto}` })
 
 })
-bot.on('sticker', (ctx) => ctx.reply('👍'))
-bot.hears('hi', (ctx) => ctx.reply('Hey there'))
-bot.hears('whothere', (ctx) => ctx.getChatMembersCount((count) => ctx.reply(String(count))))
+
 bot.launch()
 
-// Enable graceful stop
-process.once('SIGINT', () => bot.stop('SIGINT'))
-process.once('SIGTERM', () => bot.stop('SIGTERM'))
+
+
+async function getInsult(who = 'kevin') {
+    try {
+        const response = await axios.get('https://insult.mattbas.org/api/insult.txt?who=' + who);
+        return response.data
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+async function getInsulto() {
+    try {
+        const response = await axios.get('https://evilinsult.com/generate_insult.php?lang=it&type=json');
+        return response.data.insult
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+
