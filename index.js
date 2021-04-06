@@ -3,14 +3,35 @@ const { Telegraf } = require('telegraf')
 const axios = require('axios').default;
 const bot = new Telegraf(process.env.TOKEN)
 
-bot.help(async (ctx) => {
-    ctx.reply('No help for you punk')
+
+// on start create document in databse with chat id
+bot.start()
+
+// on message check user id and add to database if not present
+bot.on('text')
+
+// show inline keyboard on help. two options: diss user & add diss
+// on selection send a callback query with the name of the options as data
+bot.help((ctx) => {
+    ctx.reply('ready to diss?', {
+        reply_markup: {
+            inline_keyboard: [[
+                { text: 'diss user', callback_data: 'dissuser' }
+            ], [
+                { text: 'add diss', callback_data: 'adddiss' }
+            ]]
+        }
+    })
 })
 
-bot.hears(['kevin', 'Kevin'], (ctx) => {
-    ctx.replyWithPhoto('https://i.insider.com/5229449eecad04c3708b4570?width=1100&format=jpeg&auto=webps')
+// callback query handler
+// use switch statement to handle differente cases
+bot.on('callback_query', (ctx) => {
+    const data = ctx.update.callback_query.data
+
 })
 
+// specific command to diss kevin and only kevin
 bot.command('disskevin', async (ctx) => {
 
     const insult = await getInsult()
@@ -22,8 +43,9 @@ bot.command('disskevin', async (ctx) => {
 
 })
 
-bot.launch()
+bot.hears(['diss'],)
 
+bot.launch()
 
 
 async function getInsult(who = 'kevin') {
