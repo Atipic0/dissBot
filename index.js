@@ -4,7 +4,6 @@ const axios = require('axios').default;
 const mongoose = require('mongoose');
 const bot = new Telegraf(process.env.TOKEN)
 
-
 // DATABASE STUFF
 const mongoUri = `mongodb+srv://petz:${process.env.MONGOPASS}@cluster0.ccmem.mongodb.net/dissBot?retryWrites=true&w=majority`
 mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true });
@@ -12,33 +11,56 @@ const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', () => {
     // we're connected!
+    console.log("DB Connected")
 });
 
 const groupSchema = new mongoose.Schema({
     id: String,
+    title: String,
     users: [Object],
     group_insults: [String]
 });
-
 const Group = mongoose.model('Group', groupSchema)
 
+const userSchema = new mongoose.Schema({
+    id: String,
+    handle: String,
+    insults_created: [Object],
+    insults_personal: [Object]
+});
+
+const insultSchema = new mongoose.Schema({
+    id: String,
+    text: String,
+    created_by: String,
+    created_for: String
+});
 
 // on start create document in databse with chat id
-
-bot.start((ctx) => {
+bot.start(async (ctx) => {
     const { chat } = ctx
     const { id } = chat
+    const { title } = chat
 
-    const currentGroup = new Group({ id })
+    // check if group already exists
 
-    currentGroup.save((err) => {
-        if (err) return console.error(err);
-        ctx.reply(`added group with id: ${id}`)
-    });
+    const groupExists = await Group.findOne({ id }).exec();
 
+    if (!groupExists) {
+        const currentGroup = new Group({ id, title })
+
+        currentGroup.save((err) => {
+            if (err) return console.error(err);
+            ctx.reply(`added group with id: ${id}, title: ${title}`)
+        });
+
+    }
 })
-// on every message
-bot.on('text', async (ctx) => {
+
+// on every message check if user exists in database
+// if it doesnt add it
+
+bot.on('message', async (ctx, next) => {
 
     const { chat } = ctx
     const { id: chatId } = chat
@@ -56,7 +78,25 @@ bot.on('text', async (ctx) => {
             if (err) return console.error(err);
         });
     }
+    await next()
 })
+
+
+// on anything check if its a group, show options only if it is
+bot.use(async (ctx, next) => {
+    const { chat } = ctx
+    const { type } = chat
+
+    // commented out for DEVELOPMENT
+    // if (type !== 'group') {
+    //     ctx.reply('babbione, Dissatron3000 funziona solo nei gruppi')
+    // } else {
+    //     await next()
+    // }
+    // delete if PRODUCTION
+    await next()
+})
+
 
 // bot.on(['image','gif','video','link','sticker'],(ctx) => {
 //     ctx.reply('[WE LOVE YOU](tg://user?id=78229347)', { parse_mode: "MarkdownV2" })
@@ -152,15 +192,52 @@ bot.action('userGif', (ctx) => {
 
 // action-command to addUser
 bot.action('addUser', (ctx) => {
+
     ctx.deleteMessage()
-    ctx.reply(' sda', {
+    ctx.reply('send the contact of the person in the chat!', {
         reply_markup: {
             inline_keyboard: [
                 [{ text: 'Quit', callback_data: 'quit' }],
             ]
         }
     })
+
+
+
+
 })
+
+bot.on('contact', async (ctx) => {
+    const contact = ctx.update.message.contact
+    const { user_id, first_name } = ctx.update.message.contact
+    const { from: sender } = ctx
+    const { user_id: sender_id, first_name: sender_name } = sender
+    ctx.reply(`Ready to be insulted  [${first_name}](tg://user?id=${user_id}) ?
+You were added to Dissatron3000 by [${sender_name}](tg://user?id=${sender_id}) 
+    `, { parse_mode: 'MarkdownV2' })
+
+    const { chat } = ctx
+    const { id: chatId } = chat
+
+    const currentGroup = await Group.findOne({ id: chatId }).exec();
+    const currentUser = { id: user_id }
+
+    const users = currentGroup.users
+    const userExists = users.find((user) => user.id === user_id)
+    if (!userExists) {
+        currentGroup.users.push(currentUser)
+        currentGroup.save((err) => {
+            if (err) return console.error(err);
+        });
+    } else {
+        ctx.reply(`the user si already in the database`, { parse_mode: 'MarkdownV2' })
+    }
+
+
+})
+
+
+
 bot.command('AddUser', (ctx) => {
     ctx.deleteMessage()
 })
@@ -184,12 +261,11 @@ bot.command('SubmitDiss', (ctx) => {
 bot.on('inline_query', (ctx) => {
     const { query } = ctx.update.inline_query
     ctx.answerInlineQuery([{ type: 'article', id: 5, title: 'insult', input_message_content: { message_text: `${query}, you suck!` } }])
-    console.log(ctx.update.inline_query)
 })
 
 bot.launch()
 
-async function getInsult(who = "Giuliano") {
+async function getInsult(who = "Kevin") {
     try {
         const response = await axios.get('https://insult.mattbas.org/api/insult.txt');
         return response.data
@@ -208,3 +284,7 @@ async function getInsulto() {
         console.error(error);
     }
 }
+
+
+
+
