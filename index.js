@@ -1,13 +1,61 @@
 process.env.NODE_ENV ?? require('dotenv').config()
 const { Telegraf } = require('telegraf')
 const axios = require('axios').default;
+const mongoose = require('mongoose');
 const bot = new Telegraf(process.env.TOKEN)
+
+
+// DATABASE STUFF
+const mongoUri = `mongodb+srv://petz:${process.env.MONGOPASS}@cluster0.ccmem.mongodb.net/dissBot?retryWrites=true&w=majority`
+mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true });
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', () => {
+    // we're connected!
+});
+
+const groupSchema = new mongoose.Schema({
+    id: String,
+    users: [Object],
+    group_insults: [String]
+});
+
+const Group = mongoose.model('Group', groupSchema)
 
 
 // on start create document in databse with chat id
 
 bot.start((ctx) => {
-    ctx.reply('\'SUP')
+    const { chat } = ctx
+    const { id } = chat
+
+    const currentGroup = new Group({ id })
+
+    currentGroup.save((err) => {
+        if (err) return console.error(err);
+        ctx.reply(`added group with id: ${id}`)
+    });
+
+})
+// on every message
+bot.on('text', async (ctx) => {
+
+    const { chat } = ctx
+    const { id: chatId } = chat
+    const { from } = ctx
+    const { id } = from
+
+    const currentGroup = await Group.findOne({ id: chatId }).exec();
+    const currentUser = { id }
+
+    const users = currentGroup.users
+    const userExists = users.find((el) => el.id === id)
+    if (!userExists) {
+        currentGroup.users.push(currentUser)
+        currentGroup.save((err) => {
+            if (err) return console.error(err);
+        });
+    }
 })
 
 //ctx.update.inline_query.from.id 
@@ -84,36 +132,6 @@ bot.command('AddDiss', (ctx) => {
 })
 
 
-//-------------------------------------------------------------------------------------------------------------------
-// callback query handler
-// use switch statement to handle differente cases
-// bot.on('callback_query', (ctx) => {
-//     const data = ctx.update.callback_query.data
-//     switch (data) {
-//         case "dissuser":
-//             ctx.reply('who you wanna diss?', {
-//                 reply_markup: {
-//                     inline_keyboard: [
-//                         [{ text: 'Kevin', callback_data: 'kevin' }]
-//                         ,
-//                         [{ text: 'Dan', callback_data: 'dan' }]                                       <----  RISOLTO COL COMANDO ACTION
-//                     ]
-//                 }
-//             })
-
-//             break;
-//         case "adddiss":
-
-//             break;
-
-//         default:
-//             break;
-//     }
-
-// })
-//-------------------------------------------------------------------------------------------------------------------
-
-
 // handle inline queries
 bot.on('inline_query', (ctx) => {
     const { query } = ctx.update.inline_query
@@ -121,26 +139,7 @@ bot.on('inline_query', (ctx) => {
     console.log(ctx.update.inline_query)
 })
 
-// specific command to diss kevin and only kevin
-// bot.command('disskevin', async (ctx) => {
-//     const insult = await getInsult()
-//     const insulto = await getInsulto()
-//     ctx.reply('pippo' + insult)
-//     ctx.replyWithVoice({ url: `http://api.voicerss.org/?key=${process.env.AUDIO}&hl=en-us&c=OGG&src=${insult}` })
-//     ctx.reply('@K_Silvestri: ' + insulto)
-//     ctx.replyWithVoice({ url: `http://api.voicerss.org/?key=${process.env.AUDIO}&hl=it-it&c=OGG&src=${insulto}` })
-
-// })
-
-bot.hears(['diss'],)
-
 bot.launch()
-
-// bot.on('text', (ctx) => {
-//     const { message } = ctx;
-//     console.log(message)
-//     console.log(message.entities)
-// })
 
 async function getInsult(who = "Giuliano") {
     try {
