@@ -10,6 +10,11 @@ bot.start((ctx) => {
     ctx.reply('\'SUP')
 })
 
+// bot.on(['image','gif','video','link','sticker'],(ctx) => {
+//     ctx.reply('[WE LOVE YOU](tg://user?id=78229347)', { parse_mode: "MarkdownV2" })
+// })
+
+
 //ctx.update.inline_query.from.id 
 //ctx.update.message.entities.id
 
@@ -20,8 +25,7 @@ bot.help((ctx) => {
         reply_markup: {
             inline_keyboard: [
                 [{ text: 'Diss', callback_data: 'diss' }],
-                [{ text: 'AddUser', callback_data: 'addUser' }],
-                [{ text: 'SubmitDiss', callback_data: 'addDiss' }],
+                [{ text: 'AddUser', callback_data: 'addUser' }, { text: 'SubmitDiss', callback_data: 'submitDiss' }],
                 [{ text: 'Quit', callback_data: 'quit' }],
             ]
         }
@@ -35,23 +39,68 @@ bot.action('quit', (ctx) => {
 // action-command to diss
 bot.action('diss', (ctx) => {
     ctx.deleteMessage()
-    ctx.reply(' sda', {
-        reply_markup: {
-            inline_keyboard: [[{ text: 'Me', callback_data: 'me' }], [{ text: 'DissUser', callback_data: 'dissUser' }], [{ text: 'Quit', callback_data: 'quit' }]]
-        }
-    })
-})
-bot.command('Diss', (ctx) => {
-    ctx.reply(' sda', {
+    ctx.reply('Who?', {
+        parse_mode: "HTML",
         reply_markup: {
             inline_keyboard: [
-                [{ text: 'Me', callback_data: 'me' }],
-                [{ text: 'DissUser', callback_data: 'dissUser' }],
+                [{ text: 'Me', callback_data: 'me' }, { text: 'DissUser', callback_data: 'dissUser' }],
+                [{ text: 'Diss language', callback_data: 'language' }],
                 [{ text: 'Quit', callback_data: 'quit' }],
             ]
         }
     })
 })
+bot.command('Diss', (ctx) => {
+    ctx.deleteMessage()
+    ctx.reply('', {
+        reply_markup: {
+            inline_keyboard: [
+                [{ text: 'Me', callback_data: 'me' }, { text: 'DissUser', callback_data: 'dissUser' }],
+                [{ text: 'Diss language', callback_data: 'language' }],
+                [{ text: 'Quit', callback_data: 'quit' }],
+            ]
+        }
+    })
+})
+bot.action('me', (ctx) => {
+    ctx.deleteMessage()
+    ctx.reply('h', {
+        reply_markup: {
+            inline_keyboard: [
+                [{ text: 'Text', callback_data: 'meText' }, { text: 'Voice', callback_data: 'meVoice' }],
+                [{ text: 'Gif', callback_data: 'meGif' }],
+                [{ text: 'Quit', callback_data: 'quit' }],
+            ]
+        }
+
+    })
+})
+bot.action('meText', async (ctx) => {
+    ctx.deleteMessage()
+    const insulto = await getInsult()
+    ctx.reply(insulto)
+})
+bot.action('meVoice', async (ctx) => {
+    ctx.deleteMessage()
+    const insulto = await getInsult()
+    ctx.replyWithVoice({ url: `http://api.voicerss.org/?key=bf5dfed7ee12431fbb778d7331a36f8e&c=OGG&src=${insulto}` })
+})
+bot.action('meGif', (ctx) => {
+
+})
+bot.action('dissUser', (ctx) => {
+
+})
+bot.action('userText', (ctx) => {
+
+})
+bot.action('userVoice', (ctx) => {
+
+})
+bot.action('userGif', (ctx) => {
+
+})
+
 
 // action-command to addUser
 bot.action('addUser', (ctx) => {
@@ -65,13 +114,13 @@ bot.action('addUser', (ctx) => {
     })
 })
 bot.command('AddUser', (ctx) => {
-
+    ctx.deleteMessage()
 })
 
 //action-command to addDiss
-bot.action('addDiss', (ctx) => {
+bot.action('submitDiss', (ctx) => {
     ctx.deleteMessage()
-    ctx.reply(' sda', {
+    ctx.reply('scrivi @dissmeBot YOUR DISS', {
         reply_markup: {
             inline_keyboard: [
                 [{ text: 'Quit', callback_data: 'quit' }],
@@ -79,40 +128,9 @@ bot.action('addDiss', (ctx) => {
         }
     })
 })
-bot.command('AddDiss', (ctx) => {
+bot.command('SubmitDiss', (ctx) => {
 
 })
-
-
-//-------------------------------------------------------------------------------------------------------------------
-// callback query handler
-// use switch statement to handle differente cases
-// bot.on('callback_query', (ctx) => {
-//     const data = ctx.update.callback_query.data
-//     switch (data) {
-//         case "dissuser":
-//             ctx.reply('who you wanna diss?', {
-//                 reply_markup: {
-//                     inline_keyboard: [
-//                         [{ text: 'Kevin', callback_data: 'kevin' }]
-//                         ,
-//                         [{ text: 'Dan', callback_data: 'dan' }]                                       <----  RISOLTO COL COMANDO ACTION
-//                     ]
-//                 }
-//             })
-
-//             break;
-//         case "adddiss":
-
-//             break;
-
-//         default:
-//             break;
-//     }
-
-// })
-//-------------------------------------------------------------------------------------------------------------------
-
 
 // handle inline queries
 bot.on('inline_query', (ctx) => {
@@ -121,39 +139,25 @@ bot.on('inline_query', (ctx) => {
     console.log(ctx.update.inline_query)
 })
 
-// specific command to diss kevin and only kevin
-// bot.command('disskevin', async (ctx) => {
-//     const insult = await getInsult()
-//     const insulto = await getInsulto()
-//     ctx.reply('pippo' + insult)
-//     ctx.replyWithVoice({ url: `http://api.voicerss.org/?key=${process.env.AUDIO}&hl=en-us&c=OGG&src=${insult}` })
-//     ctx.reply('@K_Silvestri: ' + insulto)
-//     ctx.replyWithVoice({ url: `http://api.voicerss.org/?key=${process.env.AUDIO}&hl=it-it&c=OGG&src=${insulto}` })
-
-// })
-
-bot.hears(['diss'],)
 
 bot.launch()
 
-// bot.on('text', (ctx) => {
-//     const { message } = ctx;
-//     console.log(message)
-//     console.log(message.entities)
-// })
 
-async function getInsult(who = "Giuliano") {
+
+async function getInsult(who = "User") {
     try {
-        const response = await axios.get('https://insult.mattbas.org/api/insult.txt?who=' + who);
+        const response = await axios.get('https://insult.mattbas.org/api/insult.txt');
         return response.data
     } catch (error) {
         console.error(error);
     }
 }
+//who=' + who
 
 async function getInsulto() {
     try {
         const response = await axios.get('https://evilinsult.com/generate_insult.php?lang=it&type=json');
+        console.log(response.data.insult)
         return response.data.insult
     } catch (error) {
         console.error(error);
