@@ -22,9 +22,14 @@ bot.help((ctx) => {
                 [{ text: 'Diss', callback_data: 'diss' }],
                 [{ text: 'AddUser', callback_data: 'addUser' }],
                 [{ text: 'SubmitDiss', callback_data: 'addDiss' }],
+                [{ text: 'Quit', callback_data: 'quit' }],
             ]
         }
     })
+})
+//QUIT
+bot.action('quit', (ctx) => {
+    ctx.deleteMessage()
 })
 
 // action-command to diss
@@ -32,10 +37,7 @@ bot.action('diss', (ctx) => {
     ctx.deleteMessage()
     ctx.reply(' sda', {
         reply_markup: {
-            inline_keyboard: [
-                [{ text: 'Me', callback_data: 'me' }],
-                [{ text: 'DissUser', callback_data: 'dissUser' }],
-            ]
+            inline_keyboard: [[{ text: 'Me', callback_data: 'me' }], [{ text: 'DissUser', callback_data: 'dissUser' }], [{ text: 'Quit', callback_data: 'quit' }]]
         }
     })
 })
@@ -45,6 +47,7 @@ bot.command('Diss', (ctx) => {
             inline_keyboard: [
                 [{ text: 'Me', callback_data: 'me' }],
                 [{ text: 'DissUser', callback_data: 'dissUser' }],
+                [{ text: 'Quit', callback_data: 'quit' }],
             ]
         }
     })
@@ -56,13 +59,13 @@ bot.action('addUser', (ctx) => {
     ctx.reply(' sda', {
         reply_markup: {
             inline_keyboard: [
-                [{ text: 'Diss', callback_data: 'Diss' }]
+                [{ text: 'Quit', callback_data: 'quit' }],
             ]
         }
     })
 })
 bot.command('AddUser', (ctx) => {
-    
+
 })
 
 //action-command to addDiss
@@ -71,13 +74,13 @@ bot.action('addDiss', (ctx) => {
     ctx.reply(' sda', {
         reply_markup: {
             inline_keyboard: [
-                [{ text: 'Diss', callback_data: 'Diss' }]
+                [{ text: 'Quit', callback_data: 'quit' }],
             ]
         }
     })
 })
 bot.command('AddDiss', (ctx) => {
-   
+
 })
 
 
@@ -133,11 +136,11 @@ bot.hears(['diss'],)
 
 bot.launch()
 
-bot.on('text', (ctx) => {
-    const { message } = ctx;
-    console.log(message)
-    console.log(message.entities)
-})
+// bot.on('text', (ctx) => {
+//     const { message } = ctx;
+//     console.log(message)
+//     console.log(message.entities)
+// })
 
 async function getInsult(who = "Giuliano") {
     try {
