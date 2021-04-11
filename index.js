@@ -21,14 +21,11 @@ const groupSchema = new mongoose.Schema({
     group_insults: [String]
 });
 const Group = mongoose.model('Group', groupSchema)
-
 const userSchema = new mongoose.Schema({
     id: String,
-    handle: String,
     insults_created: [Object],
     insults_personal: [Object]
 });
-
 const insultSchema = new mongoose.Schema({
     id: String,
     text: String,
@@ -36,22 +33,26 @@ const insultSchema = new mongoose.Schema({
     created_for: String
 });
 
+// on anything check if its a group, show options only if it is
+bot.use(async (ctx, next) => {
+    const { chat: { type } } = ctx
+
+    if (type !== 'group') {
+        ctx.reply('Dissatron3000 only works in groups, you punk!')
+    } else {
+        await next()
+    }
+})
+
 // on start create document in databse with chat id
 bot.start(async (ctx) => {
-    const { chat } = ctx
-    const { id } = chat
-    const { title } = chat
-
-    // check if group already exists
-
+    const { chat: { id, title } } = ctx
     const groupExists = await Group.findOne({ id }).exec();
 
     if (!groupExists) {
         const currentGroup = new Group({ id, title })
-
         currentGroup.save((err) => {
             if (err) return console.error(err);
-            ctx.reply(`added group with id: ${id}, title: ${title}`)
         });
 
     }
@@ -61,15 +62,9 @@ bot.start(async (ctx) => {
 // if it doesnt add it
 
 bot.on('message', async (ctx, next) => {
-
-    const { chat } = ctx
-    const { id: chatId } = chat
-    const { from } = ctx
-    const { id } = from
-
-    const currentGroup = await Group.findOne({ id: chatId }).exec();
+    const { chat: { id: chatId }, from: { id } } = ctx
+    const currentGroup = await Group.findOne({ id: chatId })
     const currentUser = { id }
-
     const users = currentGroup.users
     const userExists = users.find((user) => user.id === id)
     if (!userExists) {
@@ -78,22 +73,6 @@ bot.on('message', async (ctx, next) => {
             if (err) return console.error(err);
         });
     }
-    await next()
-})
-
-
-// on anything check if its a group, show options only if it is
-bot.use(async (ctx, next) => {
-    const { chat } = ctx
-    const { type } = chat
-
-    // commented out for DEVELOPMENT
-    // if (type !== 'group') {
-    //     ctx.reply('babbione, Dissatron3000 funziona solo nei gruppi')
-    // } else {
-    //     await next()
-    // }
-    // delete if PRODUCTION
     await next()
 })
 
@@ -208,39 +187,27 @@ bot.action('addUser', (ctx) => {
 })
 
 bot.on('contact', async (ctx) => {
-    const contact = ctx.update.message.contact
-    const { user_id, first_name } = ctx.update.message.contact
-    const { from: sender } = ctx
-    const { user_id: sender_id, first_name: sender_name } = sender
-    ctx.reply(`Ready to be insulted  [${first_name}](tg://user?id=${user_id}) ?
-You were added to Dissatron3000 by [${sender_name}](tg://user?id=${sender_id}) 
-    `, { parse_mode: 'MarkdownV2' })
-
-    const { chat } = ctx
-    const { id: chatId } = chat
-
+    const { message: { contact: { user_id, first_name } }, from: { user_id: sender_id, first_name: sender_name }
+    } = ctx
+    const { chat: { id: chatId } } = ctx
     const currentGroup = await Group.findOne({ id: chatId }).exec();
     const currentUser = { id: user_id }
-
     const users = currentGroup.users
     const userExists = users.find((user) => user.id === user_id)
     if (!userExists) {
         currentGroup.users.push(currentUser)
         currentGroup.save((err) => {
             if (err) return console.error(err);
+            ctx.reply(`Ready to be insulted  [${first_name}](tg://user?id=${user_id}) ?
+You were added to Dissatron3000 by [${sender_name}](tg://user?id=${sender_id}) 
+                `, { parse_mode: 'MarkdownV2' })
         });
+
     } else {
-        ctx.reply(`the user si already in the database`, { parse_mode: 'MarkdownV2' })
+        ctx.reply(`the user is already in the database`, { parse_mode: 'MarkdownV2' })
     }
-
-
 })
 
-
-
-bot.command('AddUser', (ctx) => {
-    ctx.deleteMessage()
-})
 
 //action-command to addDiss
 bot.action('submitDiss', (ctx) => {
