@@ -49,7 +49,7 @@ bot.on('text', async (ctx) => {
     const currentUser = { id }
 
     const users = currentGroup.users
-    const userExists = users.find((el) => el.id === id)
+    const userExists = users.find((user) => user.id === id)
     if (!userExists) {
         currentGroup.users.push(currentUser)
         currentGroup.save((err) => {
