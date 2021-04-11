@@ -4,22 +4,6 @@ const axios = require('axios').default;
 const bot = new Telegraf(process.env.TOKEN)
 
 
-// on start create document in databse with chat id
-
-bot.start((ctx) => {
-    ctx.reply('\'SUP')
-})
-
-// bot.on(['image','gif','video','link','sticker'],(ctx) => {
-//     ctx.reply('[WE LOVE YOU](tg://user?id=78229347)', { parse_mode: "MarkdownV2" })
-// })
-
-
-//ctx.update.inline_query.from.id 
-//ctx.update.message.entities.id
-
-// show inline keyboard on help. two options: diss user & add diss
-// on selection send a callback query with the name of the options as data
 bot.help((ctx) => {
     ctx.reply('May I help?', {
         reply_markup: {
@@ -31,103 +15,77 @@ bot.help((ctx) => {
         }
     })
 })
-//QUIT
-bot.action('quit', (ctx) => {
-    ctx.deleteMessage()
+bot.on('callback_query', async (ctx) => {
+    const { data } = ctx.update.callback_query
+    let insulto = await getInsult()
+    switch (data) {
+        case "quit":
+            ctx.deleteMessage()
+            break;
+        case "diss":
+            layoutBtn(ctx, true, "PROVA")
+            break;
+        case "dissUser":
+
+            break;
+        case "addUser":
+
+            break;
+        case "submitDiss":
+
+            break;
+        case "meText":
+            ctx.deleteMessage()            
+            ctx.reply(insulto)
+            break;
+        case "meVoice":
+            ctx.deleteMessage()           
+            ctx.replyWithVoice({ url: `http://api.voicerss.org/?key=bf5dfed7ee12431fbb778d7331a36f8e&c=OGG&src=${insulto}` })
+            break;
+        case "meGif":
+
+            break;
+        case "userText":
+
+            break;
+        case "userVoice":
+
+            break;
+        case "userGif":
+
+            break;
+        case "submitDiss":
+
+            break;
+        case "submitDiss":
+
+            break;
+        case "submitDiss":
+
+            break;
+        case "submitDiss":
+
+            break;
+        case "submitDiss":
+
+            break;
+        default:
+            break;
+    }
+
 })
 
-// action-command to diss
-bot.action('diss', (ctx) => {
-    ctx.deleteMessage()
-    ctx.reply('Who?', {
-        parse_mode: "HTML",
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: 'Me', callback_data: 'me' }, { text: 'DissUser', callback_data: 'dissUser' }],
-                [{ text: 'Diss language', callback_data: 'language' }],
-                [{ text: 'Quit', callback_data: 'quit' }],
-            ]
-        }
-    })
-})
 bot.command('Diss', (ctx) => {
-    ctx.deleteMessage()
-    ctx.reply('', {
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: 'Me', callback_data: 'me' }, { text: 'DissUser', callback_data: 'dissUser' }],
-                [{ text: 'Diss language', callback_data: 'language' }],
-                [{ text: 'Quit', callback_data: 'quit' }],
-            ]
-        }
-    })
-})
-bot.action('me', (ctx) => {
-    ctx.deleteMessage()
-    ctx.reply('h', {
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: 'Text', callback_data: 'meText' }, { text: 'Voice', callback_data: 'meVoice' }],
-                [{ text: 'Gif', callback_data: 'meGif' }],
-                [{ text: 'Quit', callback_data: 'quit' }],
-            ]
-        }
-
-    })
-})
-bot.action('meText', async (ctx) => {
-    ctx.deleteMessage()
-    const insulto = await getInsult()
-    ctx.reply(insulto)
-})
-bot.action('meVoice', async (ctx) => {
-    ctx.deleteMessage()
-    const insulto = await getInsult()
-    ctx.replyWithVoice({ url: `http://api.voicerss.org/?key=bf5dfed7ee12431fbb778d7331a36f8e&c=OGG&src=${insulto}` })
-})
-bot.action('meGif', (ctx) => {
 
 })
-bot.action('dissUser', (ctx) => {
-
-})
-bot.action('userText', (ctx) => {
-
-})
-bot.action('userVoice', (ctx) => {
-
-})
-bot.action('userGif', (ctx) => {
+bot.command('Dissme', (ctx) => {
 
 })
 
-
-// action-command to addUser
-bot.action('addUser', (ctx) => {
-    ctx.deleteMessage()
-    ctx.reply(' sda', {
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: 'Quit', callback_data: 'quit' }],
-            ]
-        }
-    })
-})
 bot.command('AddUser', (ctx) => {
-    ctx.deleteMessage()
+
 })
 
-//action-command to addDiss
-bot.action('submitDiss', (ctx) => {
-    ctx.deleteMessage()
-    ctx.reply('scrivi @dissmeBot YOUR DISS', {
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: 'Quit', callback_data: 'quit' }],
-            ]
-        }
-    })
-})
 bot.command('SubmitDiss', (ctx) => {
 
 })
@@ -162,4 +120,14 @@ async function getInsulto() {
     } catch (error) {
         console.error(error);
     }
+}
+async function layoutBtn(ctx, deleteMessage = true, title = String, arrayDiOggetti = [{ text: 'Quit', callback_data: 'quit' }]) {
+    if (deleteMessage) { ctx.deleteMessage() }
+    ctx.reply(title, {
+        reply_markup: {
+            inline_keyboard: [
+                arrayDiOggetti
+            ]
+        }
+    })
 }
