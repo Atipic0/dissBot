@@ -8,8 +8,6 @@ db.once('open', () => {
     console.log("DB Connected")
 });
 
-
-
 const groupSchema = new mongoose.Schema({
     id: String,
     title: String,

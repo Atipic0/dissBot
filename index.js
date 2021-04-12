@@ -6,20 +6,21 @@ const bot = new Telegraf(process.env.TOKEN)
 // DATABASE STUFF
 const { Group } = require('./mongoose.js')
 
-
 // on anything check if its a group, show options only if it is
 bot.use(async (ctx, next) => {
-    const { chat: { type } } = ctx
-    if (type !== 'group') {
-        ctx.reply('Dissatron3000 only works in groups, here, have a sip:')
-        ctx.reply(await replyWithInsult(ctx))
-    } else {
-        await next()
+    if (ctx.type) {
+        const { chat: { type } } = ctx
+        if (type !== 'group') {
+            ctx.reply('Dissatron3000 only works in groups, here, have a sip:')
+            await replyWithInsult(ctx)
+        } else {
+            await next()
+        }
     }
+    else { await next() }
 })
 
 // on start create document in databse with chat id
-// and check if its a group, show options only if it is
 bot.start(async (ctx) => {
     const { chat: { id, title } } = ctx
     const groupExists = await Group.findOne({ id }).exec();
@@ -31,10 +32,9 @@ bot.start(async (ctx) => {
     }
 })
 
-// on every message check if user exists in database
-// if it doesnt add it
+// on every message check if user exists in database, add id to DB if it doesn't
 
-bot.on(['message'], async (ctx, next) => {
+bot.on('message', async (ctx, next) => {
     const { chat: { id: chatId }, from: { id } } = ctx
     const currentGroup = await Group.findOne({ id: chatId })
     const currentUser = { id }
@@ -68,14 +68,6 @@ bot.on('callback_query', async (ctx) => {
             break;
         case "dissTarget":
             layoutBtn(ctx, true, "Type @Dissatron3000 and select your target")
-            const { chat: { id: chatId } } = ctx
-            let inlineQueryListUser;
-            const currentGroup = await Group.find({ id: chatId }).then((data) => (inlineQueryListUser = data[0].users))
-            console.log(inlineQueryListUser)
-            bot.on('inline_query', async (ctx) => {
-                const { query } = ctx.update.inline_query
-                ctx.answerInlineQuery([{ type: 'article', id: 5, title: `${inlineQueryListUser}`, input_message_content: { message_text: "Se laterr fosse quando finalmente capiró come far funzionare sto coso...MAI", } }])
-            })
             break;
         case "addTarget":
             layoutBtn(ctx, true, "Send, in chat, the contact of the person to add.")
@@ -104,7 +96,15 @@ bot.on('callback_query', async (ctx) => {
     }
 
 })
-
+bot.on('inline_query', async (ctx) => {
+    console.log(ctx)
+    // const { chat: { id: chatId } } = ctx
+    // let inlineQueryListUser;
+    // const currentGroup = await Group.find({ id: chatId }).then((data) => (inlineQueryListUser = data[0].users))
+    // console.log(inlineQueryListUser)
+    // const { query } = ctx.update.inline_query
+    // ctx.answerInlineQuery([{ type: 'article', id: 5, title: `${inlineQueryListUser}`, input_message_content: { message_text: "Se laterr fosse quando finalmente capiró come far funzionare sto coso...MAI", } }])
+})
 
 bot.launch()
 
