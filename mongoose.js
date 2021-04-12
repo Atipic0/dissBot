@@ -1,4 +1,13 @@
 const mongoose = require('mongoose');
+const mongoUrl = `mongodb+srv://petz:${process.env.MONGOPASS}@cluster0.ccmem.mongodb.net/dissBot?retryWrites=true&w=majority`
+mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true });
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', () => {
+    // we're connected!
+    console.log("DB Connected")
+});
+
 
 
 const groupSchema = new mongoose.Schema({
@@ -23,4 +32,5 @@ const insultSchema = new mongoose.Schema({
 });
 
 
-module.exports = Group;
+
+module.exports.Group = Group;
